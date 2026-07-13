@@ -233,7 +233,7 @@ export default function Board() {
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
-    const task = filteredTasks.find(t => (t._id || t.id) === active.id)
+    const task = filteredTasks.find((t: any) => (t._id || t.id) === active.id)
     if (task) setActiveTask(task)
   }
 
@@ -245,9 +245,9 @@ export default function Board() {
     const activeId = active.id as string
     const overId = over.id as string
 
-    const activeCol = columns.find(c => c.tasks.some(t => (t._id || t.id) === activeId))
+    const activeCol = columns.find(c => c.tasks.some((t: any) => (t._id || t.id) === activeId))
     const overCol = columns.find(
-      c => c.id === overId || c.tasks.some(t => (t._id || t.id) === overId)
+      c => c.id === overId || c.tasks.some((t: any) => (t._id || t.id) === overId)
     )
 
     if (!activeCol || !overCol || activeCol.id === overCol.id) return

@@ -73,7 +73,6 @@ const TaskCard = ({ task, index }: TaskCardProps) => {
       ref={cardRef}
       variants={itemVariants}
       onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
       whileHover={{ y: -3, scale: 1.01 }}
       style={{
         background: 'rgba(22, 27, 34, 0.65)',
