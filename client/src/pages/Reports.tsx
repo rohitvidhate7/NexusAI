@@ -214,7 +214,7 @@ PRIORITY BREAKDOWN:
 ${priorityBreakdown.map(d => `- ${d.name}: ${d.value} (${Math.round((d.value / (tasks.filter((t:any)=>t.priority).length || 1)) * 100)}%)`).join('\n')}
 
 TEAM PERFORMANCE RATINGS:
-${teamPerf.map(m => `- ${m.name} (${m.role}): ${m.completed}/${m.tasks} completed tasks (Efficiency Score: ${m.score})`).join('\n')}
+${teamPerf.map((m: any) => `- ${m.name} (${m.role}): ${m.completed}/${m.tasks} completed tasks (Efficiency Score: ${m.score})`).join('\n')}
 `;
 
       const blob = new Blob([docContent], { type: 'text/plain;charset=utf-8' })
@@ -471,7 +471,7 @@ ${teamPerf.map(m => `- ${m.name} (${m.role}): ${m.completed}/${m.tasks} complete
             </tr>
           </thead>
           <tbody>
-            {teamPerf.map((m, i) => (
+            {teamPerf.map((m: any, i: number) => (
               <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.15s' }}>
                 <td style={{ padding: '12px 20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
