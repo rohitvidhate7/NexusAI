@@ -1,79 +1,261 @@
-# NexusAI
-Your Intelligent Workspace for Project Management
+<div align="center">
 
-NexusAI is a modern, AI-powered project management and team collaboration SaaS. Designed with premium glassmorphic aesthetics, it offers dynamic Kanban boards, live direct messaging, robust user workloads, and an integrated AI assistant.
+# 🚀 Nexus AI
 
-## Features
-- **Intelligent Dashboards**: Real-time workload insights, project trackers, and timeline planners.
-- **Kanban Board**: Drag-and-drop task management synchronized with your entire workspace.
-- **Direct Messaging & Chat**: Real-time private threads, group chats, and unread notifications via WebSockets.
-- **Team Management**: Detailed user profiles, access control (roles), and dynamic workload gauges.
-- **AI Assistant Contextual Support**: Leverage an intelligent conversational agent that understands your workspace data.
-- **Global Command Palette**: Lightning-fast fuzzy search across the entire platform via `Ctrl+K` or `Cmd+K`.
+### AI-Powered Enterprise Project Management Platform
 
-## Tech Stack
-**Frontend:**
-- React (Vite)
-- TypeScript
-- Framer Motion (Animations)
-- React Query (Data Fetching)
-- Tailwind / CSS Modules
-- Lucide Icons
+<img src="https://img.shields.io/badge/MERN-Stack-00ED64?style=for-the-badge&logo=mongodb&logoColor=white" />
+<img src="https://img.shields.io/badge/React-19+-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
+<img src="https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js&logoColor=white" />
+<img src="https://img.shields.io/badge/Express.js-Backend-000000?style=for-the-badge&logo=express&logoColor=white" />
+<img src="https://img.shields.io/badge/MongoDB-Database-47A248?style=for-the-badge&logo=mongodb&logoColor=white" />
+<img src="https://img.shields.io/badge/OpenAI-AI-412991?style=for-the-badge&logo=openai&logoColor=white" />
 
-**Backend:**
-- Node.js & Express
-- MongoDB (Mongoose)
-- Socket.IO (Real-time events)
+---
+
+### 💡 Intelligent Project Management for Modern Teams
+
+*Plan • Collaborate • Automate • Deliver*
+
+</div>
+
+---
+
+# 📖 About
+
+**Nexus AI** is a modern AI-powered enterprise project management platform built using the **MERN Stack**. It helps teams collaborate efficiently with intelligent task management, AI-generated workflows, real-time updates, workspace management, analytics, and secure authentication.
+
+Whether you're a startup, freelancer, or enterprise team, Nexus AI streamlines project planning and execution with AI assistance.
+
+---
+
+# ✨ Features
+
+- 🤖 AI Task Generation
+- 📊 Analytics Dashboard
+- 📁 Workspace Management
+- 👥 Team Collaboration
+- ✅ Task & Subtask Management
+- 📅 Calendar & Timeline View
+- 📌 Kanban Board
+- 🔐 JWT Authentication
+- 🌐 Google & GitHub OAuth
+- 📧 Email Verification & OTP
+- 📂 File Uploads
+- ☁️ Cloudinary Integration
+- 💳 Stripe Payment Integration
+- 🔔 Real-time Notifications
+- 📈 Productivity Reports
+- 🛡️ Role-Based Access Control
+- 📱 Fully Responsive UI
+
+---
+
+# 🛠 Tech Stack
+
+## Frontend
+
+- React.js
+- Vite
+- Tailwind CSS
+- React Router
+- Axios
+- Framer Motion
+
+## Backend
+
+- Node.js
+- Express.js
+- MongoDB Atlas
+- Mongoose
 - JWT Authentication
+- Bcrypt.js
+- Multer
+- Cloudinary
 
-## Getting Started
+## AI & Services
 
-### Prerequisites
-- Node.js (v18 or newer)
-- MongoDB instance (local or Atlas)
-- Cloudinary Account (for file uploads)
-- Google Gemini API Key (for AI assistant)
+- OpenAI API
+- Stripe
+- Nodemailer
+- Cloudinary
 
-### Installation
-1. Clone the repository and install dependencies in both client and server directories:
-   ```bash
-   cd server
-   npm install
-   
-   cd ../client
-   npm install
-   ```
+---
 
-2. Setup your `.env` variables in the `server` directory.
-   ```env
-   PORT=5000
-   MONGO_URI=your_mongodb_connection_string
-   JWT_SECRET=your_super_secret_jwt_key
-   CLOUDINARY_CLOUD_NAME=your_cloud_name
-   CLOUDINARY_API_KEY=your_api_key
-   CLOUDINARY_API_SECRET=your_api_secret
-   GEMINI_API_KEY=your_gemini_api_key
-   ```
+# 📂 Project Structure
 
-3. Start the application.
-   Terminal 1 (Backend):
-   ```bash
-   cd server
-   npm run dev
-   ```
-   
-   Terminal 2 (Frontend):
-   ```bash
-   cd client
-   npm run dev
-   ```
+```bash
+NexusAI/
+│
+├── client/
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
+├── server/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── utils/
+│   └── package.json
+│
+├── README.md
+└── package.json
+```
 
-4. Navigate to `http://localhost:5173` to access the application.
+---
 
-## Deployment
-NexusAI is ready for modern PaaS platforms:
-- **Frontend**: Deploy via Vercel, Netlify, or AWS Amplify. Make sure to define the `VITE_API_URL` environment variable.
-- **Backend**: Deploy via Render, Railway, or Heroku. Ensure all `.env` variables are configured in the cloud dashboard.
+# ⚙️ Installation
 
-## Authors
-Created by Rohit Vidhate / NexusAI Core Team.
+## Clone Repository
+
+```bash
+git clone https://github.com/rohitvidhate7/NexusAI
+```
+
+```bash
+cd NexusAI
+```
+
+---
+
+## Install Dependencies
+
+### Client
+
+```bash
+cd client
+npm install
+```
+
+### Server
+
+```bash
+cd ../server
+npm install
+```
+
+---
+
+# ▶️ Run Project
+
+### Backend
+
+```bash
+npm run dev
+```
+
+### Frontend
+
+```bash
+npm run dev
+```
+
+---
+
+# 🌍 Environment Variables
+
+Create a `.env` file inside the **server** directory.
+
+```env
+PORT=
+
+MONGO_URI=
+
+JWT_SECRET=
+
+JWT_REFRESH_SECRET=
+
+OPENAI_API_KEY=
+
+CLOUDINARY_CLOUD_NAME=
+
+CLOUDINARY_API_KEY=
+
+CLOUDINARY_API_SECRET=
+
+EMAIL_HOST=
+
+EMAIL_PORT=
+
+EMAIL_USER=
+
+EMAIL_PASS=
+
+STRIPE_SECRET_KEY=
+
+CLIENT_URL=
+```
+
+---
+
+# 📸 Screenshots
+
+> Add screenshots here
+
+```
+Home
+Dashboard
+Workspace
+Kanban Board
+Analytics
+AI Assistant
+```
+
+---
+
+# 🚀 Upcoming Features
+
+- AI Sprint Planning
+- AI Meeting Notes
+- Voice Commands
+- AI Code Review
+- AI Project Prediction
+- Mobile Application
+- Team Chat
+- Dark Mode
+- Gantt Chart
+- Time Tracking
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome!
+
+```bash
+Fork the repository
+
+Create your feature branch
+
+Commit your changes
+
+Push to the branch
+
+Create a Pull Request
+```
+
+---
+
+# ⭐ Support
+
+If you like this project, don't forget to **Star ⭐ the repository**.
+
+---
+
+# 👨‍💻 Developer
+
+**Rohit Vidhate**
+
+💼 Full Stack MERN Developer
+
+---
+
+<div align="center">
+
+### 🚀 Built with ❤️ using MERN Stack & AI
+
+**Nexus AI © 2026**
+
+</div>
