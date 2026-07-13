@@ -8,6 +8,7 @@ import { useWorkspace } from '../contexts/WorkspaceContext'
 import { getSocket } from '../lib/socket'
 import api from '../lib/api'
 import toast from 'react-hot-toast'
+import { useLocation } from 'react-router-dom'
 
 // ─── MessageItem Component (Staggered Entries) ───────────────────────────────
 
@@ -91,6 +92,7 @@ export default function Chat() {
   const [activeChannelId, setActiveChannelId] = useState<string>('')
   const [inputValue, setInputValue] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const location = useLocation()
 
   // ─── Queries ───
 
@@ -120,6 +122,35 @@ export default function Chat() {
       setActiveChannelId(channels[0]._id || channels[0].id)
     }
   }, [channels, activeChannelId])
+
+  // Handle start direct message from state (e.g. from Team members page redirect)
+  useEffect(() => {
+    const targetUserId = location.state?.startDirectMessage
+    if (targetUserId && channels.length > 0 && user?.id) {
+      const sortedIds = [user.id, targetUserId].sort().join('-')
+      const dmChannelName = `dm-${sortedIds}`
+      
+      const existingDm = channels.find((c: any) => c.name === dmChannelName)
+      
+      if (existingDm) {
+        setActiveChannelId(existingDm._id || existingDm.id)
+      } else {
+        // Create dm on the fly if it doesn't exist
+        // Note: createChannelMutation might not be available here, but we can call api directly
+        api.post('/chat/channels', {
+          name: dmChannelName,
+          workspaceId: activeWorkspaceId as string,
+          members: [targetUserId]
+        }).then(res => {
+          queryClient.invalidateQueries({ queryKey: ['channels', activeWorkspaceId] })
+          setActiveChannelId(res.data._id || res.data.id)
+        }).catch(err => console.error("Error creating DM channel:", err))
+      }
+      
+      // Clear the location state so we don't trigger it again on subsequent navigation/re-render
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state, channels, user?.id, activeWorkspaceId, queryClient])
 
   // Fetch Messages for active channel
   const { data: messages = [], isLoading: messagesLoading } = useQuery({

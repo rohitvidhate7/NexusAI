@@ -186,9 +186,15 @@ const MemberCard = ({ user, index, onViewProfile, onMessage }: MemberCardProps) 
 
 export default function Team() {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const { activeWorkspaceId } = useWorkspace()
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedProfileUser, setSelectedProfileUser] = useState<any>(null)
+
+  const handleMessageUser = (targetUser: any) => {
+    navigate('/chat', { state: { startDirectMessage: targetUser._id } })
+  }
 
   // ─── Queries ───
 
@@ -319,7 +325,13 @@ export default function Team() {
       {/* Member cards grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
         {filteredMembers.map((member: any, i: number) => (
-          <MemberCard key={member._id} user={member} index={i} />
+          <MemberCard 
+            key={member._id} 
+            user={member} 
+            index={i} 
+            onViewProfile={setSelectedProfileUser}
+            onMessage={handleMessageUser}
+          />
         ))}
       </div>
 
@@ -464,6 +476,121 @@ export default function Team() {
         )}
       </AnimatePresence>
 
+      {/* Profile Detail Modal */}
+      <AnimatePresence>
+        {selectedProfileUser && (
+          <div
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(10, 11, 20, 0.7)', backdropFilter: 'blur(8px)',
+              display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
+            }}
+            onClick={() => setSelectedProfileUser(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'rgba(22, 27, 34, 0.95)', border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: 20, padding: 24, width: '100%', maxWidth: 420,
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(139, 92, 246, 0.1)',
+                color: '#e6edf3', position: 'relative'
+              }}
+            >
+              <button
+                onClick={() => setSelectedProfileUser(null)}
+                style={{
+                  position: 'absolute', top: 16, right: 16, background: 'none', border: 'none',
+                  color: '#8b949e', cursor: 'pointer', padding: 4
+                }}
+              >
+                <X size={18} />
+              </button>
+
+              {/* User Avatar Circle */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 20 }}>
+                <div style={{
+                  width: 80, height: 80, borderRadius: '50%',
+                  background: selectedProfileUser.color || '#8b5cf6',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 28, fontWeight: 800, color: 'white', marginBottom: 12,
+                  boxShadow: `0 0 20px ${selectedProfileUser.color || '#8b5cf6'}50`
+                }}>
+                  {selectedProfileUser.initials || 'U'}
+                </div>
+                <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0, fontFamily: 'Poppins, sans-serif' }}>
+                  {selectedProfileUser.name}
+                </h3>
+                <span style={{ fontSize: 13, color: '#8b949e', marginTop: 4 }}>
+                  {ROLE_LABELS[selectedProfileUser.workspaceRole || selectedProfileUser.role] || selectedProfileUser.workspaceRole}
+                </span>
+              </div>
+
+              {/* Profile Details List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: 10 }}>
+                  <Mail size={14} color="#8b949e" />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 10, color: '#8b949e', textTransform: 'uppercase' }}>Email Address</div>
+                    <div style={{ fontSize: 12, color: 'white' }}>{selectedProfileUser.email}</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: 10 }}>
+                  <Shield size={14} color="#8b949e" />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 10, color: '#8b949e', textTransform: 'uppercase' }}>Workspace Role</div>
+                    <div style={{ fontSize: 12, color: 'white' }}>
+                      {ROLE_LABELS[selectedProfileUser.workspaceRole || selectedProfileUser.role] || selectedProfileUser.workspaceRole}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: 10 }}>
+                  <User size={14} color="#8b949e" />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 10, color: '#8b949e', textTransform: 'uppercase' }}>Workload Rating</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                      <div style={{ flex: 1, height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{
+                          width: `${selectedProfileUser.workload || 40}%`, height: '100%',
+                          background: WORKLOAD_CONFIG(selectedProfileUser.workload || 40).color
+                        }} />
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: WORKLOAD_CONFIG(selectedProfileUser.workload || 40).color }}>
+                        {selectedProfileUser.workload || 40}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  onClick={() => {
+                    handleMessageUser(selectedProfileUser);
+                    setSelectedProfileUser(null);
+                  }}
+                  style={{
+                    flex: 1, background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', border: 'none',
+                    color: 'white', fontSize: 12, fontWeight: 700, padding: '10px 0', borderRadius: 10,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    boxShadow: '0 4px 14px rgba(139,92,246,0.25)', transition: 'opacity 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                >
+                  <MessageSquare size={14} /> Send Message
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
