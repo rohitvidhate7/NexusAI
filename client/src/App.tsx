@@ -21,6 +21,7 @@ const Register = lazy(() => import('./pages/auth/Register'))
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'))
 const OTPVerification = lazy(() => import('./pages/auth/OTPVerification'))
+const SSOCallback = lazy(() => import('./pages/auth/SSOCallback'))
 const WorkspaceList = lazy(() => import('./pages/workspace/WorkspaceList'))
 const CreateWorkspace = lazy(() => import('./pages/workspace/CreateWorkspace'))
 const WorkspaceSettings = lazy(() => import('./pages/workspace/WorkspaceSettings'))
@@ -52,13 +53,7 @@ function App() {
           <Route path="/auth/forgot-password" element={<ForgotPassword />} />
           <Route path="/auth/reset-password" element={<ResetPassword />} />
           <Route path="/auth/verify-otp" element={<OTPVerification />} />
-          <Route path="/sso-callback" element={
-            isClerkEnabled ? (
-              <AuthenticateWithRedirectCallback signUpForceRedirectUrl="/dashboard" signInForceRedirectUrl="/dashboard" />
-            ) : (
-              <Navigate to="/auth/login" replace />
-            )
-          } />
+          <Route path="/sso-callback" element={<SSOCallback />} />
 
           {/* Workspace Routes */}
           <Route path="/workspaces" element={<WorkspaceList />} />

@@ -3,10 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.oauthLogin = exports.resetPassword = exports.forgotPassword = exports.verifyEmailOTP = exports.login = exports.register = void 0;
+exports.getMe = exports.googleCallback = exports.oauthLogin = exports.resetPassword = exports.forgotPassword = exports.verifyEmailOTP = exports.login = exports.register = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = __importDefault(require("../models/User"));
+const seeder_js_1 = require("../utils/seeder.js");
 const generateTokens = (userId, role) => {
     const accessToken = jsonwebtoken_1.default.sign({ id: userId, role }, process.env.JWT_SECRET, { expiresIn: '15m' });
     const refreshToken = jsonwebtoken_1.default.sign({ id: userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
@@ -27,6 +28,7 @@ const register = async (req, res) => {
             password: hashedPassword,
             authProvider: 'local'
         });
+        await (0, seeder_js_1.seedWorkspaceForUser)(user._id.toString());
         const { accessToken, refreshToken } = generateTokens(user._id.toString(), user.role);
         res.status(201).json({
             user: {
@@ -60,6 +62,7 @@ const login = async (req, res) => {
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
+        await (0, seeder_js_1.seedWorkspaceForUser)(user._id.toString());
         const { accessToken, refreshToken } = generateTokens(user._id.toString(), user.role);
         res.status(200).json({
             user: {
@@ -161,6 +164,7 @@ const oauthLogin = async (req, res) => {
                 isEmailVerified: true
             });
         }
+        await (0, seeder_js_1.seedWorkspaceForUser)(user._id.toString());
         const { accessToken, refreshToken } = generateTokens(user._id.toString(), user.role);
         res.status(200).json({
             user: {
@@ -180,3 +184,48 @@ const oauthLogin = async (req, res) => {
     }
 };
 exports.oauthLogin = oauthLogin;
+const googleCallback = async (req, res) => {
+    try {
+        const user = req.user;
+        if (!user) {
+            return res.redirect(`${process.env.CLIENT_URL || 'https://nexusai-pm.vercel.app'}/auth/login?error=auth_failed`);
+        }
+        const { accessToken, refreshToken } = generateTokens(user._id.toString(), user.role);
+        // Redirect to frontend SSO callback with tokens in URL
+        const clientUrl = process.env.CLIENT_URL || 'https://nexusai-pm.vercel.app';
+        res.redirect(`${clientUrl}/sso-callback?accessToken=${accessToken}&refreshToken=${refreshToken}`);
+    }
+    catch (error) {
+        console.error('Google Callback Error:', error);
+        res.redirect(`${process.env.CLIENT_URL || 'https://nexusai-pm.vercel.app'}/auth/login?error=server_error`);
+    }
+};
+exports.googleCallback = googleCallback;
+const getMe = async (req, res) => {
+    try {
+        const userReq = req.user;
+        if (!userReq || !userReq.id) {
+            return res.status(401).json({ message: 'Not authenticated' });
+        }
+        const user = await User_1.default.findById(userReq.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json({
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            initials: user.initials,
+            color: user.color,
+            status: user.status,
+            joinedAt: user.joinedAt,
+            avatar: user.avatar
+        });
+    }
+    catch (error) {
+        console.error('Get Me Error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+exports.getMe = getMe;

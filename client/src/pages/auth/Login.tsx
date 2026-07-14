@@ -226,28 +226,12 @@ export default function Login({ initialTab }: LoginProps) {
   }
 
   const handleGoogleLogin = async () => {
-    if (isSignInLoaded && import.meta.env.VITE_CLERK_PUBLISHABLE_KEY && !import.meta.env.VITE_CLERK_PUBLISHABLE_KEY.includes('Zm9vYmFy') && signIn) {
-      const useClerk = window.confirm("Use Clerk Google SSO redirect? (Select 'Cancel' to simulate sign-in instantly in your sandbox)")
-      if (useClerk) {
-        try {
-          await signIn.authenticateWithRedirect({
-            strategy: 'oauth_google',
-            redirectUrl: '/sso-callback',
-            redirectUrlComplete: '/dashboard'
-          })
-        } catch (err) {
-          console.error("Clerk Google Login error:", err)
-        }
-        return
-      }
-    }
-
-    setOauthModal({
-      isOpen: true,
-      provider: 'google',
-      email: 'you@gmail.com',
-      name: 'Google User'
-    });
+    // Redirect to backend Google OAuth endpoint
+    const backendUrl = import.meta.env.VITE_API_URL 
+      ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') 
+      : 'http://localhost:5000';
+      
+    window.location.href = `${backendUrl}/api/auth/google`;
   }
 
   const handleGitHubLogin = async () => {

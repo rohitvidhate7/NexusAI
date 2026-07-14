@@ -5,20 +5,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addDependency = exports.toggleSubtask = exports.addSubtask = exports.updateTask = exports.getTaskById = exports.updateTaskStatus = exports.createTask = exports.getTasks = void 0;
 const Task_1 = __importDefault(require("../models/Task"));
-const Project_1 = __importDefault(require("../models/Project"));
 const getTasks = async (req, res) => {
     try {
         const { projectId, workspaceId } = req.query;
         const userId = req.user.id;
         let filter = {};
-        if (projectId) {
+        if (projectId && projectId !== '') {
             filter.projectId = projectId;
         }
-        else if (workspaceId) {
-            // Find all projects in this workspace
-            const projects = await Project_1.default.find({ workspaceId: workspaceId });
-            const projectIds = projects.map(p => p._id);
-            filter.projectId = { $in: projectIds };
+        else if (workspaceId && workspaceId !== '') {
+            filter.workspaceId = workspaceId;
         }
         else {
             // Fetch all tasks where user is assignee or reporter
@@ -47,11 +43,11 @@ const createTask = async (req, res) => {
             description,
             status: status || 'todo',
             priority: priority || 'medium',
-            assignee,
+            assignee: (assignee && assignee !== '') ? assignee : undefined,
             reporter: req.user.id,
-            projectId,
-            workspaceId,
-            dueDate,
+            projectId: (projectId && projectId !== '') ? projectId : undefined,
+            workspaceId: (workspaceId && workspaceId !== '') ? workspaceId : undefined,
+            dueDate: (dueDate && dueDate !== '') ? new Date(dueDate) : undefined,
             labels: labels || [],
             progress: 0
         });

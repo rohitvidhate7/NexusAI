@@ -4,24 +4,46 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendMessage = exports.getMessages = exports.createChannel = exports.getChannels = void 0;
-const Channel_1 = __importDefault(require("../models/Channel"));
-const Message_1 = __importDefault(require("../models/Message"));
+const Channel_js_1 = __importDefault(require("../models/Channel.js"));
+const Message_js_1 = __importDefault(require("../models/Message.js"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const socket_service_js_1 = require("../services/socket.service.js");
 const getChannels = async (req, res) => {
     try {
         const workspaceId = req.query.workspaceId;
-        // For now, if no workspaceId is provided, we can fetch general channels or handle it later
-        const filter = workspaceId ? { workspaceId: new mongoose_1.default.Types.ObjectId(workspaceId) } : {};
-        let channels = await Channel_1.default.find(filter);
-        // Auto-create a 'general' channel if none exist for demo purposes
+        let filter = {};
+        if (workspaceId && workspaceId !== 'undefined' && workspaceId !== '') {
+            if (mongoose_1.default.Types.ObjectId.isValid(workspaceId)) {
+                filter = { workspaceId: new mongoose_1.default.Types.ObjectId(workspaceId) };
+            }
+            else {
+                return res.status(400).json({ message: 'Invalid workspaceId format' });
+            }
+        }
+        let channels = await Channel_js_1.default.find(filter);
+        // Auto-create a 'Group Chat' channel if none exist for demo purposes
         if (channels.length === 0) {
             const defaultWorkspaceId = workspaceId ? new mongoose_1.default.Types.ObjectId(workspaceId) : new mongoose_1.default.Types.ObjectId();
-            const generalChannel = await Channel_1.default.create({
-                name: 'general',
+            const generalChannel = await Channel_js_1.default.create({
+                name: 'Group Chat',
                 workspaceId: defaultWorkspaceId,
                 members: []
             });
             channels = [generalChannel];
+        }
+        else {
+            // Dynamic migration: rename any existing 'general' channel to 'Group Chat'
+            let updated = false;
+            for (const ch of channels) {
+                if (ch.name === 'general') {
+                    ch.name = 'Group Chat';
+                    await ch.save();
+                    updated = true;
+                }
+            }
+            if (updated) {
+                channels = await Channel_js_1.default.find(filter);
+            }
         }
         res.status(200).json(channels);
     }
@@ -33,14 +55,25 @@ const getChannels = async (req, res) => {
 exports.getChannels = getChannels;
 const createChannel = async (req, res) => {
     try {
-        const { name, workspaceId } = req.body;
+        const { name, workspaceId, members } = req.body;
         if (!name || !workspaceId) {
             return res.status(400).json({ message: 'Name and workspaceId are required' });
         }
-        const channel = await Channel_1.default.create({
+        if (!mongoose_1.default.Types.ObjectId.isValid(workspaceId)) {
+            return res.status(400).json({ message: 'Invalid workspaceId format' });
+        }
+        const memberIds = [new mongoose_1.default.Types.ObjectId(req.user.id)];
+        if (members && Array.isArray(members)) {
+            members.forEach((id) => {
+                if (mongoose_1.default.Types.ObjectId.isValid(id) && id !== req.user.id) {
+                    memberIds.push(new mongoose_1.default.Types.ObjectId(id));
+                }
+            });
+        }
+        const channel = await Channel_js_1.default.create({
             name,
             workspaceId: new mongoose_1.default.Types.ObjectId(workspaceId),
-            members: [new mongoose_1.default.Types.ObjectId(req.user.id)]
+            members: memberIds
         });
         res.status(201).json(channel);
     }
@@ -52,8 +85,11 @@ const createChannel = async (req, res) => {
 exports.createChannel = createChannel;
 const getMessages = async (req, res) => {
     try {
-        const { channelId } = req.params;
-        const messages = await Message_1.default.find({ channelId: new mongoose_1.default.Types.ObjectId(channelId) })
+        const channelId = req.params.channelId;
+        if (!mongoose_1.default.Types.ObjectId.isValid(channelId)) {
+            return res.status(400).json({ message: 'Invalid channelId format' });
+        }
+        const messages = await Message_js_1.default.find({ channelId: new mongoose_1.default.Types.ObjectId(channelId) })
             .populate('sender', 'name initials color avatar')
             .sort({ createdAt: 1 })
             .limit(100);
@@ -67,19 +103,22 @@ const getMessages = async (req, res) => {
 exports.getMessages = getMessages;
 const sendMessage = async (req, res) => {
     try {
-        const { channelId } = req.params;
+        const channelId = req.params.channelId;
         const { content } = req.body;
         if (!content) {
             return res.status(400).json({ message: 'Content is required' });
         }
-        const message = await Message_1.default.create({
+        if (!mongoose_1.default.Types.ObjectId.isValid(channelId)) {
+            return res.status(400).json({ message: 'Invalid channelId format' });
+        }
+        const message = await Message_js_1.default.create({
             channelId: new mongoose_1.default.Types.ObjectId(channelId),
             content,
             sender: new mongoose_1.default.Types.ObjectId(req.user.id)
         });
         const populatedMessage = await message.populate('sender', 'name initials color avatar');
         // Broadcast via socket.io
-        const io = require('../services/socket.service').getIO();
+        const io = (0, socket_service_js_1.getIO)();
         io.to(`channel_${channelId}`).emit('receive_message', populatedMessage);
         res.status(201).json(populatedMessage);
     }

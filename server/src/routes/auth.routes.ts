@@ -1,5 +1,7 @@
 import { Router } from 'express';
-import { register, login, verifyEmailOTP, forgotPassword, resetPassword, oauthLogin } from '../controllers/auth.controller';
+import passport from 'passport';
+import { register, login, verifyEmailOTP, forgotPassword, resetPassword, oauthLogin, googleCallback, getMe } from '../controllers/auth.controller';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -9,5 +11,12 @@ router.post('/verify-otp', verifyEmailOTP);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 router.post('/oauth-login', oauthLogin);
+
+// Google OAuth routes
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/google/callback', passport.authenticate('google', { session: false }), googleCallback);
+
+// Current user route
+router.get('/me', requireAuth, getMe);
 
 export default router;

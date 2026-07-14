@@ -15,7 +15,10 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use((0, helmet_1.default)());
 app.use((0, cors_1.default)({
-    origin: 'http://localhost:5173', // Vite default port
+    origin: [
+        'http://localhost:5173',
+        'https://nexusai-pm.vercel.app'
+    ],
     credentials: true
 }));
 app.use(express_1.default.json());
@@ -24,7 +27,9 @@ app.use(express_1.default.urlencoded({ extended: true }));
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'NexusAI API is running' });
 });
+const passport_js_1 = __importDefault(require("./config/passport.js"));
 // Routes will be imported here
+app.use(passport_js_1.default.initialize());
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const workspace_routes_1 = __importDefault(require("./routes/workspace.routes"));
 const project_routes_1 = __importDefault(require("./routes/project.routes"));
@@ -53,4 +58,5 @@ if (process.env.NODE_ENV !== 'test') {
         });
     });
 }
+// Active reload trigger
 exports.default = app;

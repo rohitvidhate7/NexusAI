@@ -208,3 +208,49 @@ export const oauthLogin = async (req: Request, res: Response) => {
   }
 };
 
+export const googleCallback = async (req: Request, res: Response) => {
+  try {
+    const user = req.user as any;
+    if (!user) {
+      return res.redirect(`${process.env.CLIENT_URL || 'https://nexusai-pm.vercel.app'}/auth/login?error=auth_failed`);
+    }
+
+    const { accessToken, refreshToken } = generateTokens(user._id.toString(), user.role);
+
+    // Redirect to frontend SSO callback with tokens in URL
+    const clientUrl = process.env.CLIENT_URL || 'https://nexusai-pm.vercel.app';
+    res.redirect(`${clientUrl}/sso-callback?accessToken=${accessToken}&refreshToken=${refreshToken}`);
+  } catch (error) {
+    console.error('Google Callback Error:', error);
+    res.redirect(`${process.env.CLIENT_URL || 'https://nexusai-pm.vercel.app'}/auth/login?error=server_error`);
+  }
+};
+
+export const getMe = async (req: Request, res: Response) => {
+  try {
+    const userReq = (req as any).user;
+    if (!userReq || !userReq.id) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    const user = await User.findById(userReq.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      initials: user.initials,
+      color: user.color,
+      status: user.status,
+      joinedAt: user.joinedAt,
+      avatar: user.avatar
+    });
+  } catch (error) {
+    console.error('Get Me Error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

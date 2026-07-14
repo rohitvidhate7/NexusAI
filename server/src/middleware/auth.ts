@@ -4,10 +4,7 @@ import { createClerkClient, verifyToken } from '@clerk/backend';
 const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    role: string;
-  };
+  user?: any;
 }
 
 export const requireAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {

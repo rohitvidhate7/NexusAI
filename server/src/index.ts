@@ -27,7 +27,10 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'NexusAI API is running' });
 });
 
+import passport from './config/passport.js';
+
 // Routes will be imported here
+app.use(passport.initialize());
 import authRoutes from './routes/auth.routes';
 import workspaceRoutes from './routes/workspace.routes';
 import projectRoutes from './routes/project.routes';

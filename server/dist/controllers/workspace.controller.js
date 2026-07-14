@@ -3,13 +3,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.inviteMember = exports.getWorkspaceMembers = exports.updateWorkspace = exports.getWorkspaceById = exports.createWorkspace = exports.getWorkspaces = void 0;
-const Workspace_1 = __importDefault(require("../models/Workspace"));
+exports.getAllUsers = exports.inviteMember = exports.getWorkspaceMembers = exports.updateWorkspace = exports.getWorkspaceById = exports.createWorkspace = exports.getWorkspaces = void 0;
+const Workspace_js_1 = __importDefault(require("../models/Workspace.js"));
+const User_js_1 = __importDefault(require("../models/User.js"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const getWorkspaces = async (req, res) => {
     try {
         const userId = req.user.id;
         // Find workspaces where user is owner or a member
-        const workspaces = await Workspace_1.default.find({
+        const workspaces = await Workspace_js_1.default.find({
             $or: [
                 { owner: userId },
                 { 'members.user': userId }
@@ -28,11 +30,11 @@ const createWorkspace = async (req, res) => {
         const { name, slug, description, type } = req.body;
         const userId = req.user.id;
         // Check if slug exists
-        const existing = await Workspace_1.default.findOne({ slug });
+        const existing = await Workspace_js_1.default.findOne({ slug });
         if (existing) {
             return res.status(400).json({ message: 'Workspace slug already in use' });
         }
-        const workspace = await Workspace_1.default.create({
+        const workspace = await Workspace_js_1.default.create({
             name,
             slug,
             description,
@@ -51,7 +53,7 @@ exports.createWorkspace = createWorkspace;
 const getWorkspaceById = async (req, res) => {
     try {
         const { id } = req.params;
-        const workspace = await Workspace_1.default.findById(id).populate('owner', 'name email avatar initials color');
+        const workspace = await Workspace_js_1.default.findById(id).populate('owner', 'name email avatar initials color');
         if (!workspace) {
             return res.status(404).json({ message: 'Workspace not found' });
         }
@@ -67,7 +69,7 @@ const updateWorkspace = async (req, res) => {
     try {
         const { id } = req.params;
         const { name, description, logo } = req.body;
-        const workspace = await Workspace_1.default.findById(id);
+        const workspace = await Workspace_js_1.default.findById(id);
         if (!workspace) {
             return res.status(404).json({ message: 'Workspace not found' });
         }
@@ -93,13 +95,15 @@ exports.updateWorkspace = updateWorkspace;
 const getWorkspaceMembers = async (req, res) => {
     try {
         const { id } = req.params;
-        const workspace = await Workspace_1.default.findById(id).populate('members.user', 'name email avatar initials color status role');
+        const workspace = await Workspace_js_1.default.findById(id).populate('members.user', 'name email avatar initials color status role');
         if (!workspace) {
             return res.status(404).json({ message: 'Workspace not found' });
         }
-        // Map the members to include user details and their workspace-specific role
-        const formattedMembers = workspace.members.map(member => ({
-            ...member.user._doc,
+        // Filter out members where user population failed (e.g., deleted users)
+        const formattedMembers = workspace.members
+            .filter(member => member.user)
+            .map(member => ({
+            ...(member.user._doc || {}),
             workspaceRole: member.role
         }));
         res.status(200).json(formattedMembers);
@@ -114,7 +118,10 @@ const inviteMember = async (req, res) => {
     try {
         const { id } = req.params;
         const { userId, role } = req.body;
-        const workspace = await Workspace_1.default.findById(id);
+        if (!userId || !mongoose_1.default.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: 'Valid user selection is required' });
+        }
+        const workspace = await Workspace_js_1.default.findById(id);
         if (!workspace) {
             return res.status(404).json({ message: 'Workspace not found' });
         }
@@ -123,7 +130,7 @@ const inviteMember = async (req, res) => {
             return res.status(403).json({ message: 'Only owner can invite members' });
         }
         // Check if user already in workspace
-        const existingMember = workspace.members.find(m => m.user.toString() === userId);
+        const existingMember = workspace.members.find(m => m.user && m.user.toString() === userId);
         if (existingMember) {
             return res.status(400).json({ message: 'User is already a member' });
         }
@@ -137,3 +144,14 @@ const inviteMember = async (req, res) => {
     }
 };
 exports.inviteMember = inviteMember;
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await User_js_1.default.find().select('name email avatar initials color');
+        res.status(200).json(users);
+    }
+    catch (error) {
+        console.error('Error fetching all users:', error);
+        res.status(500).json({ message: 'Server error fetching all users' });
+    }
+};
+exports.getAllUsers = getAllUsers;

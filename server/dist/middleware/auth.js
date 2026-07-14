@@ -30,9 +30,36 @@ const requireAuth = async (req, res, next) => {
             const decoded = await (0, backend_1.verifyToken)(token, {
                 secretKey: process.env.CLERK_SECRET_KEY,
             });
+            const userId = decoded.sub;
+            const User = (await import('../models/User.js')).default;
+            let user = await User.findOne({ providerId: userId });
+            if (!user) {
+                try {
+                    const clerkUser = await clerkClient.users.getUser(userId);
+                    const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+                    const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || 'Clerk User';
+                    user = await User.create({
+                        name,
+                        email,
+                        authProvider: 'google',
+                        providerId: userId,
+                        isEmailVerified: true
+                    });
+                }
+                catch (clerkErr) {
+                    // If Clerk API fails or doesn't find the user, fallback to creating a generic user document
+                    user = await User.create({
+                        name: 'Clerk User',
+                        email: `clerk-${userId}@nexusai-clerk.com`,
+                        authProvider: 'google',
+                        providerId: userId,
+                        isEmailVerified: true
+                    });
+                }
+            }
             req.user = {
-                id: decoded.sub,
-                role: decoded.metadata?.role || 'developer',
+                id: user._id.toString(),
+                role: user.role || 'developer',
             };
             return next();
         }

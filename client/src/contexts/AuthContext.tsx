@@ -14,6 +14,7 @@ interface AuthContextType {
   register: (data: any) => Promise<void>;
   oauthLogin: (data: any) => Promise<void>;
   logout: () => void;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -150,7 +151,7 @@ const ClerkAuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, oauthLogin, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, oauthLogin, logout, setUser }}>
       {!loading && children}
     </AuthContext.Provider>
   );
@@ -251,7 +252,7 @@ const LocalAuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, oauthLogin, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, oauthLogin, logout, setUser }}>
       {!loading && children}
     </AuthContext.Provider>
   );
