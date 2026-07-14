@@ -46,8 +46,14 @@ export const seedWorkspaceForUser = async (userId: string) => {
     }
 
     // 3. Create the workspace
-    const workspaceName = 'Acme Corporation';
-    const workspaceSlug = `acme-corp-${userId.substring(userId.length - 5)}`;
+    const userObj = await User.findById(userId);
+    const userName = userObj ? userObj.name : 'Personal';
+    
+    const workspaceName = `${userName}'s Workspace`;
+    
+    // Generate a safe slug from the name
+    const safeName = userName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    const workspaceSlug = `${safeName}-${userId.substring(userId.length - 5)}`;
     
     const workspaceMembers = [
       { user: new mongoose.Types.ObjectId(userId), role: 'owner' as const },
@@ -57,7 +63,7 @@ export const seedWorkspaceForUser = async (userId: string) => {
     const workspace = await Workspace.create({
       name: workspaceName,
       slug: workspaceSlug,
-      description: 'Main workspace for Acme Corp projects',
+      description: `Main workspace for ${userName}'s projects`,
       type: 'organization',
       owner: new mongoose.Types.ObjectId(userId),
       members: workspaceMembers,
