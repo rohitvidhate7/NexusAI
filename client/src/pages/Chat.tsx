@@ -100,9 +100,11 @@ export default function Chat() {
   const { data: channels = [], isLoading: channelsLoading } = useQuery({
     queryKey: ['channels', activeWorkspaceId],
     queryFn: async () => {
-      const res = await api.get('/chat/channels')
+      if (!activeWorkspaceId) return []
+      const res = await api.get(`/chat/channels?workspaceId=${activeWorkspaceId}`)
       return res.data as Channel[]
-    }
+    },
+    enabled: !!activeWorkspaceId
   })
 
   // Fetch workspace members (replaces hardcoded mockUsers)
