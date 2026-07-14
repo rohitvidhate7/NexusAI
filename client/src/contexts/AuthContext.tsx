@@ -192,7 +192,7 @@ const LocalAuthProvider = ({ children }: { children: ReactNode }) => {
       initSocket(tokens.accessToken);
       
       toast.success(`Welcome back, ${userData.name}!`);
-      navigate('/dashboard');
+      navigate('/workspaces');
     } catch (error: any) {
       const msg = error.response?.data?.message || 'Failed to login';
       toast.error(msg);
@@ -213,7 +213,7 @@ const LocalAuthProvider = ({ children }: { children: ReactNode }) => {
       initSocket(tokens.accessToken);
       
       toast.success('Account created successfully!');
-      navigate('/dashboard');
+      navigate('/workspaces');
     } catch (error: any) {
       const msg = error.response?.data?.message || 'Failed to register';
       toast.error(msg);

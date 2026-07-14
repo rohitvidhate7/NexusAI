@@ -35,8 +35,8 @@ const SSOCallback = () => {
         localStorage.setItem('user', JSON.stringify(user));
         setUser(user);
         
-        // Success! Go to dashboard
-        navigate('/dashboard', { replace: true });
+        // Success! Go to workspaces
+        navigate('/workspaces', { replace: true });
       } catch (error) {
         console.error('Failed to fetch user profile:', error);
         // Clean up on failure
