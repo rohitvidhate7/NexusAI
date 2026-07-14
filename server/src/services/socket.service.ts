@@ -9,7 +9,10 @@ let io: SocketServer;
 export const initializeSocket = (server: HttpServer) => {
   io = new SocketServer(server, {
     cors: {
-      origin: 'http://localhost:5173',
+      origin: [
+        'http://localhost:5173',
+        'https://nexusai-pm.vercel.app'
+      ],
       credentials: true
     }
   });
