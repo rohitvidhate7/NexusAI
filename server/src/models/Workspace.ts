@@ -9,7 +9,7 @@ export interface IWorkspace extends Document {
   owner: mongoose.Types.ObjectId;
   members: {
     user: mongoose.Types.ObjectId;
-    role: 'owner' | 'admin' | 'member' | 'viewer';
+    role: 'owner' | 'admin' | 'project_manager' | 'developer' | 'qa' | 'designer' | 'client' | 'guest' | 'member' | 'viewer';
   }[];
   status: 'active' | 'archived';
   initials: string;
@@ -28,7 +28,7 @@ const workspaceSchema = new Schema<IWorkspace>(
     owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     members: [{
       user: { type: Schema.Types.ObjectId, ref: 'User' },
-      role: { type: String, enum: ['owner', 'admin', 'member', 'viewer'], default: 'member' }
+      role: { type: String, enum: ['owner', 'admin', 'project_manager', 'developer', 'qa', 'designer', 'client', 'guest', 'member', 'viewer'], default: 'member' }
     }],
     status: { type: String, enum: ['active', 'archived'], default: 'active' },
     initials: { type: String, required: true },

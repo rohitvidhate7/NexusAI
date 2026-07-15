@@ -43,7 +43,7 @@ const workspaceSchema = new mongoose_1.Schema({
     owner: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
     members: [{
             user: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
-            role: { type: String, enum: ['owner', 'admin', 'member', 'viewer'], default: 'member' }
+            role: { type: String, enum: ['owner', 'admin', 'project_manager', 'developer', 'qa', 'designer', 'client', 'guest', 'member', 'viewer'], default: 'member' }
         }],
     status: { type: String, enum: ['active', 'archived'], default: 'active' },
     initials: { type: String, required: true },
