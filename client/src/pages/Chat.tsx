@@ -93,6 +93,8 @@ export default function Chat() {
   const [inputValue, setInputValue] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
+  
+  const currentUserId = user?.id || (user as any)?._id || ''
 
   // ─── Queries ───
 
@@ -128,8 +130,8 @@ export default function Chat() {
   // Handle start direct message from state (e.g. from Team members page redirect)
   useEffect(() => {
     const targetUserId = location.state?.startDirectMessage
-    if (targetUserId && channels.length > 0 && user?.id) {
-      const sortedIds = [user.id, targetUserId].sort().join('-')
+    if (targetUserId && channels.length > 0 && currentUserId) {
+      const sortedIds = [currentUserId, targetUserId].sort().join('-')
       const dmChannelName = `dm-${sortedIds}`
       
       const existingDm = channels.find((c: any) => c.name === dmChannelName)
@@ -152,7 +154,7 @@ export default function Chat() {
       // Clear the location state so we don't trigger it again on subsequent navigation/re-render
       window.history.replaceState({}, document.title)
     }
-  }, [location.state, channels, user?.id, activeWorkspaceId, queryClient])
+  }, [location.state, channels, currentUserId, activeWorkspaceId, queryClient])
 
   // Fetch Messages for active channel
   const { data: messages = [], isLoading: messagesLoading } = useQuery({
@@ -165,7 +167,7 @@ export default function Chat() {
         content: msg.content,
         sender: msg.sender,
         timestamp: new Date(msg.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        isSelf: msg.sender._id === user?.id
+        isSelf: (msg.sender?._id || msg.sender?.id || msg.sender) === currentUserId
       }))
     },
     enabled: !!activeChannelId
@@ -192,7 +194,7 @@ export default function Chat() {
             content: msg.content,
             sender: msg.sender,
             timestamp: new Date(msg.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-            isSelf: msg.sender._id === user?.id
+            isSelf: (msg.sender?._id || msg.sender?.id || msg.sender) === currentUserId
           }
           if (old?.find((m: any) => m.id === formattedMsg.id)) return old;
           return [...(old || []), formattedMsg];
@@ -204,7 +206,7 @@ export default function Chat() {
     return () => {
       socket.off('receive_message', handleReceive)
     }
-  }, [activeChannelId, user?.id, queryClient])
+  }, [activeChannelId, currentUserId, queryClient])
 
   // Send Message Mutation
   const sendMessageMutation = useMutation({
@@ -227,10 +229,10 @@ export default function Chat() {
   })
 
   const handleStartDM = (targetUserId: string) => {
-    if (!user?.id || !targetUserId) return
+    if (!currentUserId || !targetUserId) return
     
     // Sort user IDs alphabetically to form a unique, consistent DM channel name
-    const sortedIds = [user.id, targetUserId].sort().join('-')
+    const sortedIds = [currentUserId, targetUserId].sort().join('-')
     const dmChannelName = `dm-${sortedIds}`
     
     const existingDm = channels.find((c: any) => c.name === dmChannelName)
@@ -262,8 +264,8 @@ export default function Chat() {
     
     if (activeChannel.name.startsWith('dm-')) {
       const parts = activeChannel.name.split('-')
-      const otherUserId = parts.find((p: string) => p !== 'dm' && p !== user?.id)
-      const otherUser = members.find((m: any) => m._id === otherUserId)
+      const otherUserId = parts.find((p: string) => p !== 'dm' && p !== currentUserId)
+      const otherUser = members.find((m: any) => (m._id || m.id) === otherUserId)
       return {
         name: otherUser ? otherUser.name : 'Direct Message',
         description: otherUser ? `Direct message with ${otherUser.name}` : 'Private conversation',
@@ -348,14 +350,17 @@ export default function Chat() {
             {membersLoading && <Loader2 size={11} className="animate-spin" color="#8b5cf6" />}
           </div>
 
-          {members.map((u: any) => {
-            const sortedIds = [user?.id, u._id].sort().join('-')
-            const dmChannelName = `dm-${sortedIds}`
-            const isActive = activeChannel && activeChannel.name === dmChannelName
-            return (
-              <motion.div
-                key={u._id}
-                onClick={() => handleStartDM(u._id)}
+          {members
+            .filter((u: any) => (u._id || u.id) !== currentUserId)
+            .map((u: any) => {
+              const memberId = u._id || u.id
+              const sortedIds = [currentUserId, memberId].sort().join('-')
+              const dmChannelName = `dm-${sortedIds}`
+              const isActive = activeChannel && activeChannel.name === dmChannelName
+              return (
+                <motion.div
+                  key={memberId}
+                  onClick={() => handleStartDM(memberId)}
                 whileHover={{ scale: 1.02, x: 2 }}
                 whileTap={{ scale: 0.98 }}
                 style={{

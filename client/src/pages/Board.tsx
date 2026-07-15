@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, memo } from 'react'
-import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core'
+import { DndContext, DragOverlay, closestCorners, useDroppable } from '@dnd-kit/core'
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -55,11 +55,9 @@ const TaskCard = memo(function TaskCard({ task, isDragging }: { task: any; isDra
   }
 
   return (
-    <motion.div 
+    <div 
       ref={setNodeRef} 
       style={style} 
-      layoutId={taskId} 
-      layout 
       {...attributes} 
       {...listeners}
     >
@@ -119,9 +117,63 @@ const TaskCard = memo(function TaskCard({ task, isDragging }: { task: any; isDra
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 })
+
+const BoardColumn = ({ column, children, onAddCard }: { column: any; children: React.ReactNode; onAddCard: (colId: string) => void }) => {
+  const { setNodeRef } = useDroppable({
+    id: column.id
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        background: 'rgba(22, 27, 34, 0.45)', border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: 14, minWidth: 250, flex: 1, display: 'flex', flexDirection: 'column',
+        maxHeight: 'calc(100vh - 160px)', overflow: 'hidden'
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLUMN_COLORS[column.id] }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'white', fontFamily: 'Poppins, sans-serif' }}>{column.title}</span>
+          <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', padding: '1px 6px', borderRadius: 100, color: '#8b949e' }}>{column.tasks.length}</span>
+        </div>
+      </div>
+
+      {/* Tasks List */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 10px 0' }}>
+        {children}
+      </div>
+
+      {/* Column Footer Trigger */}
+      <button
+        onClick={() => onAddCard(column.id)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6, background: 'none',
+          border: '1px dashed rgba(255,255,255,0.08)', borderRadius: 8,
+          color: '#8b949e', fontSize: 11, padding: '6px 12px', margin: 10,
+          cursor: 'pointer', transition: 'all 0.15s'
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.borderColor = 'rgba(139,92,246,0.3)'
+          e.currentTarget.style.background = 'rgba(139,92,246,0.06)'
+          e.currentTarget.style.color = 'white'
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+          e.currentTarget.style.background = 'none'
+          e.currentTarget.style.color = '#8b949e'
+        }}
+      >
+        <Plus size={12} /> Add Card
+      </button>
+    </div>
+  )
+}
 
 // ─── Main Kanban Board Page Component ────────────────────────────────────────
 
@@ -328,72 +380,33 @@ export default function Board() {
           display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 16, alignItems: 'flex-start'
         }}>
           {columns.map(column => (
-            <div
+            <BoardColumn
               key={column.id}
-              id={column.id}
-              style={{
-                background: 'rgba(22, 27, 34, 0.45)', border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 14, minWidth: 250, flex: 1, display: 'flex', flexDirection: 'column',
-                maxHeight: 'calc(100vh - 160px)', overflow: 'hidden'
+              column={column}
+              onAddCard={(colId) => {
+                setTaskForm(prev => ({ ...prev, status: colId }))
+                setIsTaskModalOpen(true)
               }}
             >
-              {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLUMN_COLORS[column.id] }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'white', fontFamily: 'Poppins, sans-serif' }}>{column.title}</span>
-                  <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', padding: '1px 6px', borderRadius: 100, color: '#8b949e' }}>{column.tasks.length}</span>
-                </div>
-              </div>
-
-              {/* Tasks List */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '10px 10px 0' }}>
-                <SortableContext
-                  items={column.tasks.map((t: any) => t._id || t.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {column.tasks.map((task: any) => (
-                    <TaskCard
-                      key={task._id || task.id}
-                      task={task}
-                      isDragging={activeTask?._id === task._id}
-                    />
-                  ))}
-                </SortableContext>
-
-                {column.tasks.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '20px 10px', color: '#8b949e', fontSize: 11 }}>
-                    No tasks yet
-                  </div>
-                )}
-              </div>
-
-              {/* Column Footer Trigger */}
-              <button
-                onClick={() => {
-                  setTaskForm(prev => ({ ...prev, status: column.id }))
-                  setIsTaskModalOpen(true)
-                }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6, background: 'none',
-                  border: '1px dashed rgba(255,255,255,0.08)', borderRadius: 8,
-                  color: '#8b949e', fontSize: 11, padding: '6px 12px', margin: 10,
-                  cursor: 'pointer', transition: 'all 0.15s'
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = 'rgba(139,92,246,0.3)'
-                  e.currentTarget.style.background = 'rgba(139,92,246,0.06)'
-                  e.currentTarget.style.color = 'white'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
-                  e.currentTarget.style.background = 'none'
-                  e.currentTarget.style.color = '#8b949e'
-                }}
+              <SortableContext
+                items={column.tasks.map((t: any) => t._id || t.id)}
+                strategy={verticalListSortingStrategy}
               >
-                <Plus size={12} /> Add Card
-              </button>
-            </div>
+                {column.tasks.map((task: any) => (
+                  <TaskCard
+                    key={task._id || task.id}
+                    task={task}
+                    isDragging={(activeTask?._id || activeTask?.id) === (task._id || task.id)}
+                  />
+                ))}
+              </SortableContext>
+
+              {column.tasks.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '20px 10px', color: '#8b949e', fontSize: 11 }}>
+                  No tasks yet
+                </div>
+              )}
+            </BoardColumn>
           ))}
         </div>
 

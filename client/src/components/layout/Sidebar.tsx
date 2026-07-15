@@ -383,40 +383,7 @@ export default function Sidebar() {
           </NavLink>
         </motion.div>
 
-        {/* Recent Projects */}
-        {!collapsed && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 6px' }}>
-              <span style={{ ...sectionLabelStyle }}>RECENT PROJECTS</span>
-              <Plus size={12} color="var(--text-muted)" style={{ cursor: 'pointer' }} />
-            </div>
-            {recentProjects.map(p => (
-              <motion.div
-                key={p.name}
-                whileHover={{ scale: 1.02, x: 2 }}
-                whileTap={{ scale: 0.98 }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '5px 10px', margin: '1px 8px', borderRadius: 8,
-                  cursor: 'pointer', transition: 'background 0.15s',
-                  outline: 'none',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                onClick={() => navigate('/projects')}
-                tabIndex={0}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ' ') navigate('/projects')
-                }}
-                className="focus-visible:ring-1 focus-visible:ring-purple-500/40"
-              >
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.color, flexShrink: 0 }} />
-                <span style={{ fontSize: 12, color: 'var(--text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{p.progress}%</span>
-              </motion.div>
-            ))}
-          </>
-        )}
+
       </div>
 
       {/* User Profile */}
