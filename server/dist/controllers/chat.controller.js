@@ -11,14 +11,24 @@ const socket_service_js_1 = require("../services/socket.service.js");
 const getChannels = async (req, res) => {
     try {
         const workspaceId = req.query.workspaceId;
+        const userId = req.user.id;
         let filter = {};
         if (workspaceId && workspaceId !== 'undefined' && workspaceId !== '') {
             if (mongoose_1.default.Types.ObjectId.isValid(workspaceId)) {
-                filter = { workspaceId: new mongoose_1.default.Types.ObjectId(workspaceId) };
+                filter.workspaceId = new mongoose_1.default.Types.ObjectId(workspaceId);
             }
             else {
                 return res.status(400).json({ message: 'Invalid workspaceId format' });
             }
+        }
+        // Security: Only return public channels OR DM channels where this user is a participant
+        const userObjectId = mongoose_1.default.Types.ObjectId.isValid(userId) ? new mongoose_1.default.Types.ObjectId(userId) : null;
+        filter.$or = [
+            { name: { $not: /^dm-/ } },
+            { name: new RegExp(`dm-.*${userId}.*`, 'i') }
+        ];
+        if (userObjectId) {
+            filter.$or.push({ members: userObjectId });
         }
         let channels = await Channel_js_1.default.find(filter);
         // Auto-create a 'Group Chat' channel if none exist for demo purposes

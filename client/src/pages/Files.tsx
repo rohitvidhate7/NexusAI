@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, Grid, List, SortAsc, MoreHorizontal, FileText, FileSpreadsheet, Film, Archive, File, Loader2 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -71,6 +71,32 @@ export default function Files() {
     onError: (err: any) => {
       setUploading(false)
       toast.error('File upload failed')
+    }
+  })
+
+  // File Delete Menu State & Click listener
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setActiveMenuId(null)
+    }
+    document.addEventListener('click', handleOutsideClick)
+    return () => document.removeEventListener('click', handleOutsideClick)
+  }, [])
+
+  // File Delete Mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/upload/document/${id}`)
+      return res.data
+    },
+    onSuccess: () => {
+      toast.success('File deleted successfully!')
+      queryClient.invalidateQueries({ queryKey: ['documents', activeWorkspaceId] })
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to delete file')
     }
   })
 
@@ -223,13 +249,53 @@ export default function Files() {
                   }}
                   onClick={() => window.open(file.url, '_blank')}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, position: 'relative' }}>
                     <div style={{
                       width: 36, height: 36, borderRadius: 8,
                       background: `${iconCfg.color}18`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       <IconComp size={18} color={iconCfg.color} />
+                    </div>
+
+                    <div style={{ position: 'relative' }}>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenuId(activeMenuId === file._id ? null : file._id);
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#8b949e', cursor: 'pointer', padding: 4, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        onMouseEnter={e => e.currentTarget.style.color = 'white'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#8b949e'}
+                      >
+                        <MoreHorizontal size={16} />
+                      </button>
+                      {activeMenuId === file._id && (
+                        <div 
+                          style={{
+                            position: 'absolute', right: 0, top: 24, background: 'rgba(22, 27, 34, 0.95)', border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: 6, padding: 4, zIndex: 100, boxShadow: '0 4px 12px rgba(0,0,0,0.5)', width: 80, backdropFilter: 'blur(8px)'
+                          }}
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm(`Are you sure you want to delete "${file.name}"?`)) {
+                                deleteMutation.mutate(file._id);
+                              }
+                              setActiveMenuId(null);
+                            }}
+                            style={{
+                              background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px 8px',
+                              fontSize: 11, fontWeight: 600, width: '100%', textAlign: 'left', borderRadius: 4, transition: 'background 0.2s'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div style={{

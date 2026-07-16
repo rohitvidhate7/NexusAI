@@ -88,6 +88,10 @@ const initializeSocket = (server) => {
         socket.on('join_channel', (channelId) => {
             socket.join(`channel_${channelId}`);
         });
+        socket.on('leave_channel', (channelId) => {
+            socket.leave(`channel_${channelId}`);
+            console.log(`User left channel: ${channelId}`);
+        });
         socket.on('disconnect', () => {
             console.log(`User disconnected: ${socket.user.id}`);
         });

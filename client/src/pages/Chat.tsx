@@ -120,10 +120,15 @@ export default function Chat() {
     enabled: !!activeWorkspaceId
   })
 
-  // Auto-select first channel when channels load
+  // Auto-select first channel when channels load (prefer public channels)
   useEffect(() => {
     if (channels.length > 0 && !activeChannelId) {
-      setActiveChannelId(channels[0]._id || channels[0].id)
+      const publicCh = channels.find((c: any) => !c.name.startsWith('dm-'))
+      if (publicCh) {
+        setActiveChannelId(publicCh._id || publicCh.id)
+      } else {
+        setActiveChannelId(channels[0]._id || channels[0].id)
+      }
     }
   }, [channels, activeChannelId])
 
@@ -187,7 +192,10 @@ export default function Chat() {
     socket.emit('join_channel', activeChannelId)
 
     const handleReceive = (msg: any) => {
-      if (msg.channelId === activeChannelId) {
+      const msgChannelId = (msg.channelId?._id || msg.channelId?.id || msg.channelId || '').toString().toLowerCase();
+      const activeChanId = (activeChannelId || '').toString().toLowerCase();
+      
+      if (msgChannelId === activeChanId) {
         queryClient.setQueryData(['messages', activeChannelId], (old: any) => {
           const formattedMsg = {
             id: msg._id,
@@ -205,6 +213,7 @@ export default function Chat() {
     socket.on('receive_message', handleReceive)
     return () => {
       socket.off('receive_message', handleReceive)
+      socket.emit('leave_channel', activeChannelId)
     }
   }, [activeChannelId, currentUserId, queryClient])
 

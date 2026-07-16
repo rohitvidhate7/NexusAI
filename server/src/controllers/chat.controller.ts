@@ -7,14 +7,27 @@ import { getIO } from '../services/socket.service.js';
 export const getChannels = async (req: Request, res: Response) => {
   try {
     const workspaceId = req.query.workspaceId as string | undefined;
+    const userId = (req as any).user.id;
     
-    let filter = {};
+    let filter: any = {};
     if (workspaceId && workspaceId !== 'undefined' && workspaceId !== '') {
       if (mongoose.Types.ObjectId.isValid(workspaceId)) {
-        filter = { workspaceId: new mongoose.Types.ObjectId(workspaceId) };
+        filter.workspaceId = new mongoose.Types.ObjectId(workspaceId);
       } else {
         return res.status(400).json({ message: 'Invalid workspaceId format' });
       }
+    }
+    
+    // Security: Only return public channels OR DM channels where this user is a participant
+    const userObjectId = mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : null;
+    
+    filter.$or = [
+      { name: { $not: /^dm-/ } },
+      { name: new RegExp(`dm-.*${userId}.*`, 'i') }
+    ];
+    
+    if (userObjectId) {
+      filter.$or.push({ members: userObjectId });
     }
     
     let channels = await Channel.find(filter);

@@ -97,6 +97,11 @@ export const initializeSocket = (server: HttpServer) => {
       socket.join(`channel_${channelId}`);
     });
 
+    socket.on('leave_channel', (channelId: string) => {
+      socket.leave(`channel_${channelId}`);
+      console.log(`User left channel: ${channelId}`);
+    });
+
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${(socket as any).user.id}`);
     });

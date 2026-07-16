@@ -77,4 +77,48 @@ router.get('/documents', async (req, res) => {
         res.status(500).json({ message: 'Server error fetching documents' });
     }
 });
+router.delete('/document/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const doc = await Document_js_1.default.findById(id);
+        if (!doc) {
+            return res.status(404).json({ message: 'Document not found' });
+        }
+        const isCloudinary = doc.url.includes('cloudinary.com');
+        if (isCloudinary) {
+            const parts = doc.url.split('/');
+            const filename = parts.pop() || '';
+            const publicId = filename.split('.')[0];
+            const folderName = 'nexusai_uploads';
+            const fullPublicId = `${folderName}/${publicId}`;
+            try {
+                const { deleteFile } = await import('../services/cloudinary.service.js');
+                await deleteFile(fullPublicId);
+            }
+            catch (err) {
+                console.error('Failed to delete file from Cloudinary:', err);
+            }
+        }
+        else {
+            const filename = doc.url.split('/').pop() || '';
+            try {
+                const fs = await import('fs');
+                const path = await import('path');
+                const filePath = path.join(process.cwd(), 'uploads', filename);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            }
+            catch (err) {
+                console.error('Failed to delete local file:', err);
+            }
+        }
+        await Document_js_1.default.findByIdAndDelete(id);
+        res.status(200).json({ message: 'Document deleted successfully' });
+    }
+    catch (error) {
+        console.error('Error deleting document:', error);
+        res.status(500).json({ message: 'Server error deleting document' });
+    }
+});
 exports.default = router;
