@@ -8,12 +8,15 @@ const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const db_1 = require("./config/db");
+const path_1 = __importDefault(require("path"));
 // Load env vars
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
 // Middleware
-app.use((0, helmet_1.default)());
+app.use((0, helmet_1.default)({
+    crossOriginResourcePolicy: false, // Ensure local assets can be requested from other origins
+}));
 app.use((0, cors_1.default)({
     origin: [
         'http://localhost:5173',
@@ -23,6 +26,7 @@ app.use((0, cors_1.default)({
 }));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
+app.use('/uploads', express_1.default.static(path_1.default.join(process.cwd(), 'uploads')));
 // Basic Health Check Route
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'NexusAI API is running' });

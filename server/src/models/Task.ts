@@ -48,7 +48,7 @@ const taskSchema = new Schema<ITask>(
     },
     assignee: { type: Schema.Types.ObjectId, ref: 'User' },
     reporter: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    projectId: { type: Schema.Types.ObjectId, ref: 'Project', required: true },
+    projectId: { type: Schema.Types.ObjectId, ref: 'Project' },
     workspaceId: { type: Schema.Types.ObjectId, ref: 'Workspace', required: true },
     storyPoints: { type: Number },
     sprint: { type: String },

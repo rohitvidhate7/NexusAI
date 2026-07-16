@@ -56,6 +56,52 @@ export default function Sidebar() {
   const workspaceInitials = activeWorkspace?.initials || '??'
   const workspaceColor = activeWorkspace?.color || '#7C3AED'
 
+  // Fetch projects count
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects', activeWorkspaceId],
+    queryFn: async () => {
+      if (!activeWorkspaceId) return []
+      const res = await api.get(`/projects?workspaceId=${activeWorkspaceId}`)
+      return res.data
+    },
+    enabled: !!activeWorkspaceId
+  })
+
+  // Fetch tasks count
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['tasks', activeWorkspaceId],
+    queryFn: async () => {
+      if (!activeWorkspaceId) return []
+      const res = await api.get(`/tasks?workspaceId=${activeWorkspaceId}`)
+      return res.data
+    },
+    enabled: !!activeWorkspaceId
+  })
+
+  // Fetch chat channels count
+  const { data: channels = [] } = useQuery({
+    queryKey: ['channels', activeWorkspaceId],
+    queryFn: async () => {
+      if (!activeWorkspaceId) return []
+      const res = await api.get(`/chat/channels?workspaceId=${activeWorkspaceId}`)
+      return res.data
+    },
+    enabled: !!activeWorkspaceId
+  })
+
+  const getBadgeValue = (label: string) => {
+    if (label === 'Projects') return projects.length
+    if (label === 'My Tasks') {
+      const currentUserId = user?.id || (user as any)?._id || ''
+      return tasks.filter((t: any) => {
+        const assigneeId = (t.assignee?._id || t.assignee?.id || t.assignee || '').toString().toLowerCase()
+        return assigneeId === currentUserId.toLowerCase() && t.status !== 'done'
+      }).length
+    }
+    if (label === 'Chat') return channels.length
+    return undefined
+  }
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) setCollapsed(true)
@@ -212,75 +258,78 @@ export default function Sidebar() {
             MAIN
           </div>
         )}
-        {navItems.map(({ to, icon: Icon, label, badge }) => (
-          <motion.div
-            key={to}
-            whileHover={{ scale: 1.02, x: 2 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-            style={{ width: '100%', outline: 'none' }}
-          >
-            <NavLink
-              to={to}
-              style={({ isActive }) => ({
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '7px 10px', margin: '1px 8px', borderRadius: 8,
-                color: isActive ? '#7C3AED' : 'var(--text-muted)',
-                background: isActive
-                  ? 'linear-gradient(135deg, rgba(124,58,237,0.08), rgba(37,99,235,0.06))'
-                  : 'transparent',
-                borderRight: isActive ? '2px solid #7C3AED' : '2px solid transparent',
-                textDecoration: 'none', fontSize: 13, fontWeight: 500,
-                transition: 'all 0.15s', position: 'relative',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
-                outline: 'none',
-              })}
-              onMouseEnter={e => {
-                const el = e.currentTarget as HTMLAnchorElement
-                if (!el.classList.contains('active') && !el.getAttribute('aria-current')) {
-                  el.style.background = 'var(--bg-hover)'
-                  el.style.color = 'var(--text-secondary)'
-                }
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget as HTMLAnchorElement
-                if (!el.classList.contains('active') && !el.getAttribute('aria-current')) {
-                  el.style.background = 'transparent'
-                  el.style.color = 'var(--text-muted)'
-                }
-              }}
-              className="focus-visible:ring-1 focus-visible:ring-purple-500/40"
+        {navItems.map(({ to, icon: Icon, label }) => {
+          const badgeValue = getBadgeValue(label)
+          return (
+            <motion.div
+              key={to}
+              whileHover={{ scale: 1.02, x: 2 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+              style={{ width: '100%', outline: 'none' }}
             >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <div style={{
-                      position: 'absolute', left: 0, top: 4, bottom: 4,
-                      width: 3,
-                      background: 'linear-gradient(180deg, #7C3AED, #2563EB)',
-                      borderRadius: '0 3px 3px 0',
-                    }} />
-                  )}
-                  <Icon size={15} strokeWidth={isActive ? 2.5 : 2} style={{ flexShrink: 0, color: isActive ? '#7C3AED' : 'inherit' }} />
-                  {!collapsed && (
-                    <>
-                      <span style={{ flex: 1 }}>{label}</span>
-                      {badge && (
-                        <span style={{
-                          background: isActive ? 'rgba(124,58,237,0.15)' : 'rgba(15, 23, 42, 0.05)',
-                          color: isActive ? '#7C3AED' : 'var(--text-muted)',
-                          fontSize: 10, fontWeight: 600, padding: '1px 6px',
-                          borderRadius: 100, minWidth: 20, textAlign: 'center',
-                        }}>{badge}</span>
-                      )}
-                    </>
-                  )}
-                </>
-              )}
-            </NavLink>
-          </motion.div>
-        ))}
+              <NavLink
+                to={to}
+                style={({ isActive }) => ({
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '7px 10px', margin: '1px 8px', borderRadius: 8,
+                  color: isActive ? '#7C3AED' : 'var(--text-muted)',
+                  background: isActive
+                    ? 'linear-gradient(135deg, rgba(124,58,237,0.08), rgba(37,99,235,0.06))'
+                    : 'transparent',
+                  borderRight: isActive ? '2px solid #7C3AED' : '2px solid transparent',
+                  textDecoration: 'none', fontSize: 13, fontWeight: 500,
+                  transition: 'all 0.15s', position: 'relative',
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                  outline: 'none',
+                })}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLAnchorElement
+                  if (!el.classList.contains('active') && !el.getAttribute('aria-current')) {
+                    el.style.background = 'var(--bg-hover)'
+                    el.style.color = 'var(--text-secondary)'
+                  }
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLAnchorElement
+                  if (!el.classList.contains('active') && !el.getAttribute('aria-current')) {
+                    el.style.background = 'transparent'
+                    el.style.color = 'var(--text-muted)'
+                  }
+                }}
+                className="focus-visible:ring-1 focus-visible:ring-purple-500/40"
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <div style={{
+                        position: 'absolute', left: 0, top: 4, bottom: 4,
+                        width: 3,
+                        background: 'linear-gradient(180deg, #7C3AED, #2563EB)',
+                        borderRadius: '0 3px 3px 0',
+                      }} />
+                    )}
+                    <Icon size={15} strokeWidth={isActive ? 2.5 : 2} style={{ flexShrink: 0, color: isActive ? '#7C3AED' : 'inherit' }} />
+                    {!collapsed && (
+                      <>
+                        <span style={{ flex: 1 }}>{label}</span>
+                        {badgeValue !== undefined && badgeValue > 0 && (
+                          <span style={{
+                            background: isActive ? 'rgba(124,58,237,0.15)' : 'rgba(15, 23, 42, 0.05)',
+                            color: isActive ? '#7C3AED' : 'var(--text-muted)',
+                            fontSize: 10, fontWeight: 600, padding: '1px 6px',
+                            borderRadius: 100, minWidth: 20, textAlign: 'center',
+                          }}>{badgeValue}</span>
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
+              </NavLink>
+            </motion.div>
+          )
+        })}
 
         {/* AI Features */}
         {!collapsed && (

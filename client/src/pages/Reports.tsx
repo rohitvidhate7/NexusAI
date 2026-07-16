@@ -169,7 +169,11 @@ export default function Reports() {
 
   // 4. Team Performance scores
   const teamPerf = members.map((m: any) => {
-    const memberTasks = tasks.filter((t: any) => t.assignee?._id === m._id || t.assignee === m._id)
+    const memberId = (m._id || m.id || '').toString().toLowerCase()
+    const memberTasks = tasks.filter((t: any) => {
+      const assigneeId = (t.assignee?._id || t.assignee?.id || t.assignee || '').toString().toLowerCase()
+      return assigneeId === memberId && memberId !== ''
+    })
     const completedTasks = memberTasks.filter((t: any) => t.status === 'done')
     const rate = memberTasks.length > 0 ? Math.round((completedTasks.length / memberTasks.length) * 100) : 100
     // Score combines rate + workload
@@ -208,13 +212,18 @@ SUMMARY METRICS:
 - Productivity Rate: ${completedCount} Done
 
 TASK STATUS DISTRIBUTION:
-${taskDistribution.map(d => `- ${d.name}: ${d.value} (${Math.round((d.value / (totalTasks || 1)) * 100)}%)`).join('\n')}
+- Completed: ${completedCount} (${totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0}%)
+- In Progress: ${inProgressCount} (${totalTasks > 0 ? Math.round((inProgressCount / totalTasks) * 100) : 0}%)
+- Review: ${reviewCount} (${totalTasks > 0 ? Math.round((reviewCount / totalTasks) * 100) : 0}%)
+- Backlog / Todo: ${backlogTodoCount} (${totalTasks > 0 ? Math.round((backlogTodoCount / totalTasks) * 100) : 0}%)
 
 PRIORITY BREAKDOWN:
-${priorityBreakdown.map(d => `- ${d.name}: ${d.value} (${Math.round((d.value / (tasks.filter((t:any)=>t.priority).length || 1)) * 100)}%)`).join('\n')}
+- High: ${highCount} (${totalTasks > 0 ? Math.round((highCount / totalTasks) * 100) : 0}%)
+- Medium: ${medCount} (${totalTasks > 0 ? Math.round((medCount / totalTasks) * 100) : 0}%)
+- Low: ${lowCount} (${totalTasks > 0 ? Math.round((lowCount / totalTasks) * 100) : 0}%)
 
 TEAM PERFORMANCE RATINGS:
-${teamPerf.map((m: any) => `- ${m.name} (${m.role}): ${m.completed}/${m.tasks} completed tasks (Efficiency Score: ${m.score})`).join('\n')}
+${teamPerf.map((m: any) => `- ${m.name} (${m.role}): ${m.completed}/${m.tasks} completed tasks (Efficiency Score: ${m.score}%)`).join('\n')}
 `;
 
       const blob = new Blob([docContent], { type: 'text/plain;charset=utf-8' })

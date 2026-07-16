@@ -51,11 +51,11 @@ export default function Topbar() {
 
   const page = getPageInfo()
 
-  const mockNotifications = [
+  const [notifications, setNotifications] = useState([
     { id: '1', title: 'Task Assigned', message: 'Sarah K. assigned you "Implement dark mode"', time: '5m ago' },
     { id: '2', title: 'Sprint Started', message: 'Sprint 12 has been officially launched', time: '1h ago' },
     { id: '3', title: 'New Comment', message: 'Marcus commented on "Optimize database queries"', time: '2h ago' }
-  ]
+  ])
 
   const handleAskAi = () => {
     window.dispatchEvent(new CustomEvent('toggle-ai-assistant'))
@@ -178,19 +178,21 @@ export default function Topbar() {
             className="focus-visible:ring-2 focus-visible:ring-purple-500/50"
           >
             <Bell size={17} />
-            <span
-              style={{
-                position: 'absolute',
-                top: 4,
-                right: 4,
-                width: 7,
-                height: 7,
-                background: '#EF4444',
-                borderRadius: '50%',
-                border: '1.5px solid var(--bg-primary)',
-                boxShadow: '0 0 6px rgba(239,68,68,0.4)',
-              }}
-            />
+            {notifications.length > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: 4,
+                  right: 4,
+                  width: 7,
+                  height: 7,
+                  background: '#EF4444',
+                  borderRadius: '50%',
+                  border: '1.5px solid var(--bg-primary)',
+                  boxShadow: '0 0 6px rgba(239,68,68,0.4)',
+                }}
+              />
+            )}
           </motion.button>
 
           <AnimatePresence>
@@ -210,24 +212,35 @@ export default function Topbar() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: 8, marginBottom: 8 }}>
                   <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', fontFamily: 'Poppins, sans-serif' }}>Notifications</span>
-                  <button style={{ background: 'none', border: 'none', fontSize: 11, color: '#7C3AED', fontWeight: 600, cursor: 'pointer' }}>Mark all read</button>
+                  <button 
+                    onClick={() => setNotifications([])}
+                    style={{ background: 'none', border: 'none', fontSize: 11, color: '#7C3AED', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Mark all read
+                  </button>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {mockNotifications.map(n => (
-                    <div 
-                      key={n.id} 
-                      style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', transition: 'background 0.2s' }} 
-                      onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'} 
-                      onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-                      tabIndex={0}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-primary)' }}>{n.title}</span>
-                        <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{n.time}</span>
-                      </div>
-                      <span style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{n.message}</span>
+                  {notifications.length === 0 ? (
+                    <div style={{ padding: '12px 10px', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
+                      No new notifications
                     </div>
-                  ))}
+                  ) : (
+                    notifications.map(n => (
+                      <div 
+                        key={n.id} 
+                        style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', transition: 'background 0.2s' }} 
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'} 
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                        tabIndex={0}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-primary)' }}>{n.title}</span>
+                          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{n.time}</span>
+                        </div>
+                        <span style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{n.message}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </motion.div>
             )}

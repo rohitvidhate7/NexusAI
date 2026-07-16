@@ -379,7 +379,11 @@ export default function Calendar() {
 
               <form onSubmit={(e) => {
                 e.preventDefault();
-                createTaskMutation.mutate(taskForm);
+                const submitData = { ...taskForm };
+                if (!submitData.projectId && projects.length > 0) {
+                  submitData.projectId = projects[0]._id || projects[0].id;
+                }
+                createTaskMutation.mutate(submitData);
               }} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div>
                   <label style={{ fontSize: 11, color: '#8b949e', display: 'block', marginBottom: 4 }}>Event Title</label>

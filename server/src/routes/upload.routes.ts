@@ -11,7 +11,18 @@ router.post('/avatar', upload.single('avatar'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
-  res.status(200).json({ url: req.file.path });
+  let fileUrl = req.file.path;
+  const isCloudinaryConfigured = 
+    process.env.CLOUDINARY_CLOUD_NAME && 
+    process.env.CLOUDINARY_CLOUD_NAME !== 'Root' &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET;
+  if (!isCloudinaryConfigured) {
+    const host = req.get('host');
+    const protocol = req.protocol;
+    fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+  }
+  res.status(200).json({ url: fileUrl });
 });
 
 router.post('/document', upload.single('document'), async (req, res) => {
@@ -27,11 +38,23 @@ router.post('/document', upload.single('document'), async (req, res) => {
     const type = req.file.originalname.split('.').pop() || 'file';
     const sizeInMB = (req.file.size / (1024 * 1024)).toFixed(2) + ' MB';
 
+    let fileUrl = req.file.path;
+    const isCloudinaryConfigured = 
+      process.env.CLOUDINARY_CLOUD_NAME && 
+      process.env.CLOUDINARY_CLOUD_NAME !== 'Root' &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_SECRET;
+    if (!isCloudinaryConfigured) {
+      const host = req.get('host');
+      const protocol = req.protocol;
+      fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+    }
+
     const doc = await Document.create({
       name: req.file.originalname,
       type,
       size: sizeInMB,
-      url: req.file.path,
+      url: fileUrl,
       uploadedBy: (req as any).user.id,
       workspaceId
     });

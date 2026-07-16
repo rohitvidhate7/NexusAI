@@ -264,8 +264,11 @@ export default function Chat() {
     
     if (activeChannel.name.startsWith('dm-')) {
       const parts = activeChannel.name.split('-')
-      const otherUserId = parts.find((p: string) => p !== 'dm' && p !== currentUserId)
-      const otherUser = members.find((m: any) => (m._id || m.id) === otherUserId)
+      const otherUserId = parts.find((p: string) => p.toLowerCase() !== 'dm' && p.toLowerCase() !== currentUserId.toLowerCase())
+      const otherUser = members.find((m: any) => {
+        const mId = (m._id || m.id || '').toString().toLowerCase()
+        return mId === otherUserId?.toLowerCase()
+      })
       return {
         name: otherUser ? otherUser.name : 'Direct Message',
         description: otherUser ? `Direct message with ${otherUser.name}` : 'Private conversation',

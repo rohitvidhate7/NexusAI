@@ -53,7 +53,7 @@ const taskSchema = new mongoose_1.Schema({
     },
     assignee: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
     reporter: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
-    projectId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Project', required: true },
+    projectId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Project' },
     workspaceId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Workspace', required: true },
     storyPoints: { type: Number },
     sprint: { type: String },
